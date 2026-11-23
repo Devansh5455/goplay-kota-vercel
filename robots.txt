@@ -17,6 +17,5 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Disallow: /classic/
 
 Sitemap: https://goplaykota.com/sitemap.xml

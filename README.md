@@ -9,10 +9,8 @@ Designed by peaknpixel.
 | Path | What it is |
 |---|---|
 | `index.html` | Home (Design 1), with the playable pickleball court |
-| `court.html` | Design 1 with the light "court" hero (not indexed by Google) |
 | `pickleball.html`, `badminton.html`, `swimming.html`, `turf.html`, `fitness.html` | Sport pages |
 | `academy.html`, `membership.html`, `visit.html` | Academy, plans and prices, visit and map |
-| `classic/` | Design 2 (Classic), a full copy for comparing designs (not indexed by Google) |
 | `assets/` | CSS, JavaScript, photos, Blender renders, 3D court plates |
 | `sitemap.xml`, `robots.txt`, `llms.txt` | SEO, plus a plain-text price sheet for AI assistants |
 | `vercel.json` | Clean URLs (`/pickleball` instead of `/pickleball.html`), caching and security headers |
@@ -44,9 +42,6 @@ Run `npx vercel` inside this folder, or drag the folder onto vercel.com/new.
 
 - The site is written for **https://goplaykota.com**: canonical links, the sitemap and structured data all use that address. Add the domain in Vercel under **Project → Settings → Domains**.
 - On the free `*.vercel.app` address everything works, and Google still credits the real domain.
-- **To launch with one design only:**
-  - Delete the `classic/` folder and `court.html`.
-  - In each HTML file, delete the line that starts with `<nav class="dswitch"`. That removes the "Compare" bar at the bottom of the page.
 - Submit `https://goplaykota.com/sitemap.xml` in Google Search Console.
 - Prices come from goplaykota.com/book and goplaykota.com/plans (GST included, as of November 2026). Update them in the HTML if Go Play changes them.
 - Three.js (the 3D court) and Google Fonts load from public CDNs, so the visitor needs an internet connection (normal for a website).
