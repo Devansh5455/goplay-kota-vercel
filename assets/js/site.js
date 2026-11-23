@@ -78,41 +78,27 @@
   function intro() { document.body.classList.add('ready'); dispatchEvent(new Event('gp-intro')); }
   function runLoader() {
     const L = $('.loader'), ball = $('.ld-ball', L), sh = $('.ld-shadow', L), word = $('.ld-word', L), slot = $('.ld-slot', word);
-    const W = innerWidth, H = innerHeight, floorY = H * .58, r = 32, land = floorY - r;
-    const sr = slot.getBoundingClientRect(); const tx = sr.left + sr.width / 2, ty = sr.top + sr.height / 2, sc = sr.width / 64;
-    gsap.set(ball, { x: -90, y: H * .12 }); gsap.set(sh, { x: -90, opacity: .25, scale: .5 });
-    const sync = () => { const x = gsap.getProperty(ball, 'x'), y = gsap.getProperty(ball, 'y'); const k = Math.max(.25, 1 - (land - y) / (H * .5)); gsap.set(sh, { x, scale: k, opacity: .55 * k }); };
-    gsap.ticker.add(sync);
-    const tl = gsap.timeline({ onComplete: () => gsap.ticker.remove(sync) });
-    const squash = (k = .75) => tl.to(ball, { scaleY: k, scaleX: 2 - k, duration: .07, yoyo: true, repeat: 1, transformOrigin: '50% 100%', ease: 'power1.out' });
-    const hop = (x, peak, dur, yEnd = land) => {
-      tl.to(ball, { x, duration: dur, ease: 'none' });
-      tl.to(ball, { y: Math.min(yEnd, land) - peak, duration: dur * .5, ease: 'power2.out' }, '<');
-      tl.to(ball, { y: yEnd, duration: dur * .5, ease: 'power2.in' }, '>');
-    };
-    // 1) drop in from the left and bounce to the centre
-    tl.to(ball, { x: W * .22, duration: .5, ease: 'none' }).to(ball, { y: land, duration: .5, ease: 'power2.in' }, '<'); squash();
-    hop(W * .5, H * .2, .5); squash();
-    // 2) on to the right, then back to the centre
-    hop(W * .8, H * .16, .45); squash();
-    hop(W * .5, H * .22, .5);
-    // 3) land hard: the press creates the logo
-    tl.to(ball, { scaleY: .55, scaleX: 1.45, duration: .09, transformOrigin: '50% 100%' })
-      .to($$('.lt span', word), { scale: 1, duration: .6, ease: 'back.out(2.2)', stagger: .045 }, '<')
-      .to(ball, { scaleY: 1, scaleX: 1, duration: .12 });
-    // 4) bounce away to the left, then back into the O
-    hop(W * .18, H * .2, .5); squash();
-    tl.to(ball, { x: tx, duration: .6, ease: 'none' })
-      .to(ball, { y: Math.min(ty, land) - H * .22, duration: .3, ease: 'power2.out' }, '<')
-      .to(ball, { y: ty, scale: sc, duration: .3, ease: 'power2.in' }, '>')
-      .to(sh, { opacity: 0, duration: .2 }, '<')
-      // 5) a few small settling bounces in place
-      .to(ball, { y: ty - 16, duration: .12, ease: 'power2.out' }).to(ball, { y: ty, duration: .12, ease: 'power2.in' })
-      .to(ball, { y: ty - 5, duration: .07, ease: 'power2.out' }).to(ball, { y: ty, duration: .07, ease: 'power2.in' })
-      .to(ball, { rotation: 0, duration: .01 })
-      .to('.ld-meta', { opacity: .7, duration: .4 }, '<')
-      .to(L, { clipPath: 'inset(0 0 100% 0)', duration: 1, ease: 'expo.inOut' }, '+=.45')
-      .add(() => { root.classList.remove('loading'); L.remove(); intro(); }, '-=.5');
+    const W = innerWidth, H = innerHeight, wr = word.getBoundingClientRect(), sr = slot.getBoundingClientRect();
+    const D = sr.width, fy = sr.bottom, top = wr.top + wr.height * .08, slotX = sr.left + D / 2;
+    const lts = $$('.lt span', word), mid = lts[Math.floor(lts.length / 2)];
+    ball.style.width = ball.style.height = D + 'px'; sh.style.width = D + 'px'; sh.style.left = '0px'; sh.style.top = (fy - D * .09) + 'px';
+    const pts = [
+      { x: W * .1, y: -D * 1.3, h: 0 },
+      { x: W * .2, y: fy, h: H * .3 },
+      { x: W * .5, y: top, h: H * .2, pop: 'some' },
+      { x: W * .8, y: fy, h: H * .26 },
+      { x: W * .5, y: top, h: H * .2, pop: 'all' },
+      { x: slotX, y: fy, h: D * 1.15 },
+      { x: slotX, y: fy, h: D * .42 }, { x: slotX, y: fy, h: D * .14 }, { x: slotX, y: fy, h: D * .04 }, { x: slotX, y: fy, h: 0, soft: .4 }
+    ];
+    gsap.set(lts, { scale: 0 });
+    GPBall.play({ el: ball, shadow: sh, pts, D, base: [D / 2, D], floor: fy, maxH: H * .5, minTop: D * 1.4,
+      onHit: p => { if (p.pop === 'some') gsap.to([lts[0], lts[2]], { scale: 1, duration: .45, ease: 'back.out(2)', stagger: .04 }); if (p.pop === 'all') gsap.to(lts, { scale: 1, duration: .45, ease: 'back.out(2)', stagger: .035 }); },
+      onDone: () => {
+        gsap.timeline().to('.ld-meta', { opacity: .7, duration: .3 }).to(sh, { opacity: 0, duration: .2 }, '<')
+          .to(L, { clipPath: 'inset(0 0 100% 0)', duration: .9, ease: 'expo.inOut' }, '+=.25')
+          .add(() => { root.classList.remove('loading'); L.remove(); intro(); }, '-=.45');
+      } });
     try { sessionStorage.setItem('gp-seen', '1'); } catch (e) { }
   }
   function startIntro() {
@@ -334,33 +320,29 @@
   }
   /* ---------- footer: the ball bounces in and becomes the O ---------- */
   function footBall() {
-    const b = $('.foot .fball'), sh = $('.foot .fshadow'); if (!b) return;
-    const drop = () => { const H = b.offsetHeight; const tl = gsap.timeline();
-      tl.set(b, { y: -H * 2.6, scaleX: .9, scaleY: 1.1, rotation: -90 }).set(sh, { scaleX: .3, opacity: .1 })
-        .to(b, { y: 0, rotation: 0, duration: .55, ease: 'power2.in' }).to(sh, { scaleX: 1, opacity: 1, duration: .55, ease: 'power2.in' }, '<')
-        .to(b, { scaleX: 1.25, scaleY: .72, duration: .08, transformOrigin: '50% 100%' })
-        .to(b, { scaleX: .94, scaleY: 1.06, y: -H * 1.1, duration: .32, ease: 'power2.out' }).to(sh, { scaleX: .55, opacity: .4, duration: .32 }, '<')
-        .to(b, { scaleX: 1, scaleY: 1, y: 0, duration: .3, ease: 'power2.in' }).to(sh, { scaleX: 1, opacity: 1, duration: .3 }, '<')
-        .to(b, { scaleX: 1.14, scaleY: .86, duration: .07, transformOrigin: '50% 100%' }).to(b, { scaleX: 1, scaleY: 1, y: -H * .32, duration: .2, ease: 'power2.out' })
-        .to(b, { y: 0, duration: .2, ease: 'power2.in' }).to(b, { y: -H * .08, duration: .1, ease: 'power1.out' }).to(b, { y: 0, duration: .1, ease: 'power1.in' });
-      return tl; };
-    gsap.set(b, { y: -9999 });
+    const b = $('.foot .fball'), sh = $('.foot .fshadow'), fo = $('.foot .fo'); if (!b) return;
+    let busy = false;
+    const drop = () => { if (busy) return; busy = true; const D = fo.offsetWidth; GPBall.idle.delete(b);
+      GPBall.play({ el: b, shadow: sh, D, pts: [{ x: 0, y: -D * 3.2, h: 0 }, { x: 0, y: 0, h: D * 1.3 }, { x: 0, y: 0, h: D * .48 }, { x: 0, y: 0, h: D * .16 }, { x: 0, y: 0, h: D * .05 }, { x: 0, y: 0, h: 0, soft: .4 }], floor: 0, maxH: D * 3, idle: -3,
+        onHit: (() => { let n = 0; return () => { if (n++ === 0) gsap.fromTo($$('.foot .big .fl'), { y: 0 }, { y: '-5%', duration: .12, yoyo: true, repeat: 1, stagger: .03, ease: 'power2.out' }); }; })(),
+        onDone: () => { busy = false; b._a0 = 0; GPBall.idle.add(b); } }); };
+    b.style.transform = 'translate(0,-9999px)';
     ScrollTrigger.create({ trigger: '.foot .big', start: 'top 95%', once: true, onEnter: drop });
-    $('.foot .fo').addEventListener('pointerenter', () => { if (!gsap.isTweening(b)) drop(); });
-    $$('.foot .sprites img').forEach((im, i) => gsap.to(im, { y: i % 2 ? -30 : 30, rotate: '+=12', duration: 3 + i, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    fo.addEventListener('pointerenter', drop);
   }
   /* ---------- header logo: the O bounces in its own place once the page opens ---------- */
   function logoBall() {
+    $$('.gp .o').forEach(o => GPBall.idle.add(o));
     const o = $('.nav .gp .o'); if (!o) return;
-    gsap.timeline({ delay: .3 }).fromTo(o, { y: '-1.4em', scale: .6 }, { y: 0, scale: 1, duration: .45, ease: 'power2.in' })
-      .to(o, { scaleX: 1.25, scaleY: .75, duration: .07, yoyo: true, repeat: 1, transformOrigin: '50% 100%' })
-      .to(o, { y: '-.5em', duration: .22, ease: 'power2.out' }).to(o, { y: 0, duration: .22, ease: 'power2.in' })
-      .to(o, { y: '-.15em', duration: .1, ease: 'power1.out' }).to(o, { y: 0, duration: .1, ease: 'power1.in' });
+    const go = () => { const D = o.offsetWidth; GPBall.idle.delete(o);
+      GPBall.play({ el: o, D, pts: [{ x: 0, y: -D * 2.2, h: 0 }, { x: 0, y: 0, h: D * 1.1 }, { x: 0, y: 0, h: D * .38 }, { x: 0, y: 0, h: D * .12 }, { x: 0, y: 0, h: 0, soft: .3 }], idle: 4, onDone: () => GPBall.idle.add(o) }); };
+    setTimeout(go, 250);
+    $('.nav .logo') && $('.nav .logo').addEventListener('pointerenter', go);
   }
   function cta() {
     const im = $('.cta2 .bgimg'); if (!im) return;
     gsap.fromTo(im, { yPercent: -6, scale: 1.12 }, { yPercent: 6, scale: 1, ease: 'none', scrollTrigger: { trigger: '.cta2', start: 'top bottom', end: 'bottom top', scrub: true } });
-    const ob = $('.cta2 .ob'); if (ob) ScrollTrigger.create({ trigger: '.cta2 h2', start: 'top 70%', once: true, onEnter: () => gsap.timeline().fromTo(ob, { y: '-1.6em' }, { y: 0, duration: .5, ease: 'bounce.out' }) });
+    const ob = $('.cta2 .ob'); if (ob) { GPBall.idle.add(ob); ScrollTrigger.create({ trigger: '.cta2 h2', start: 'top 70%', once: true, onEnter: () => { const D = ob.offsetWidth; GPBall.idle.delete(ob); GPBall.play({ el: ob, D, pts: [{ x: 0, y: -D * 2.6, h: 0 }, { x: 0, y: 0, h: D * 1.1 }, { x: 0, y: 0, h: D * .4 }, { x: 0, y: 0, h: D * .13 }, { x: 0, y: 0, h: 0, soft: .3 }], idle: 4, onDone: () => GPBall.idle.add(ob) }); } }); }
   }
   addEventListener('gp-intro', () => { reveals(); showcase(); fly(); day(); reviewsAnim(); footBall(); logoBall(); cta(); ScrollTrigger.refresh(); }, { once: true });
 })();

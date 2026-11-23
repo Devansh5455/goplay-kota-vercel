@@ -190,3 +190,25 @@ html.gameplay .flash{z-index:5001}
 .vmap .map{margin-top:clamp(0px,4vw,62px)}
 @media (max-width:900px){.visit-grid{gap:64px!important}.vmap .map{margin-top:0}}
 .fly{background:#0B1A3A}
+
+/* ===== 3D pickleball everywhere (Blender render, 36 spin frames) ===== */
+.ld-ball,.gp .o,.cta2 .ob,.foot .big .fball{background:url(../img/ball-3d.webp) 0 0/600% 600% no-repeat!important;border-radius:0!important;box-shadow:none!important;filter:drop-shadow(0 .04em .06em rgba(0,0,0,.18))}
+.ld-ball::before,.ld-ball::after,.gp .o::before,.gp .o::after,.cta2 .ob::before,.cta2 .ob::after,.foot .big .fball::before,.foot .big .fball::after{content:none!important;display:none!important}
+.ld-ball{margin:0!important;will-change:transform}
+.ld-shadow{margin:0!important;height:14px!important;transform-origin:50% 50%;filter:blur(5px)!important}
+.gp .o{will-change:transform}
+.foot .big .fball{position:absolute;inset:0;will-change:transform}
+.foot .big .fshadow{transform-origin:50% 50%}
+.logo:hover .gp .o{animation:none!important}
+
+/* ===== Go Play wordmark: Unbounded Black (self-hosted) ===== */
+@font-face{font-family:"GP Logo";src:url(../fonts/unbounded-900.woff2) format("woff2");font-weight:900;font-display:swap}
+.gp,.logo .gp,.ld-word,.foot .big{font-family:"GP Logo",var(--fd)!important;font-weight:900!important;font-stretch:100%!important;font-variation-settings:normal!important;text-transform:uppercase}
+.logo .gp{font-size:.86em;letter-spacing:-.03em}
+.gp .o{width:.8em!important;height:.8em!important;margin:0 .03em 0 .05em!important}
+.gp .sp{width:.3em}
+.ld-word{font-size:clamp(46px,10.5vw,150px)!important;letter-spacing:-.035em!important;gap:.04em!important;line-height:.8!important}
+.ld-word .ld-slot{width:.8em!important;height:.8em!important;margin:0 .02em}
+.foot .big{font-size:clamp(56px,15.2vw,280px)!important;letter-spacing:-.04em!important;line-height:.8!important}
+.foot .big .fo{width:.8em!important;height:.8em!important}
+@media (max-width:760px){.foot .big{font-size:15vw!important}}
