@@ -278,7 +278,7 @@
       let i = 0; while (i < SKY.length - 2 && H > SKY[i + 1][0]) i++;
       const A = SKY[i], B = SKY[i + 1], t = Math.min(1, Math.max(0, (H - A[0]) / (B[0] - A[0])));
       const top = lc(A[1], B[1], t), bot = lc(A[2], B[2], t), ink = lc(A[3], B[3], t);
-      sky.style.background = `radial-gradient(120% 80% at 50% 110%, ${bot}, ${top})`; pin.style.color = ink; pin.style.setProperty('--dsk2', top);
+      sky.style.background = `radial-gradient(120% 80% at 50% 110%, ${bot}, ${top})`; sec.style.background = bot; pin.style.color = ink; pin.style.setProperty('--dsk2', top);
       const night = H > 19.5 || H < 6.2; stars.style.opacity = night ? Math.min(1, (H > 19.5 ? H - 19.5 : 6.2 - H) / 1.5) : 0;
       // orb travels around the dial: angle from hour (0h at top)
       const ang = ((H % 24) / 24) * Math.PI * 2 - Math.PI / 2, rad = dial.offsetWidth / 2 * (R / 160);
