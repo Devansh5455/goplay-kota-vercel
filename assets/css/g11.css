@@ -212,3 +212,11 @@ html.gameplay .flash{z-index:5001}
 .foot .big{font-size:clamp(56px,15.2vw,280px)!important;letter-spacing:-.04em!important;line-height:.8!important}
 .foot .big .fo{width:.8em!important;height:.8em!important}
 @media (max-width:760px){.foot .big{font-size:15vw!important}}
+/* footer wordmark: never squeeze the ball — size from the container, not the viewport */
+.foot .big{font-size:clamp(56px,15.2vw,224px)!important}
+.foot .big>*{flex-shrink:0!important}
+.foot .big .fo{aspect-ratio:1/1;min-width:.8em}
+/* footer wordmark fills the width with natural letter spacing (no stretched gaps) */
+.foot .wrap{container-type:inline-size}
+.foot .big{justify-content:flex-start!important;font-size:18.4cqw!important}
+.foot .big .gap{width:.2em!important}
