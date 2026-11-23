@@ -11,7 +11,10 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- renderer / scene ----------
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
 renderer.setClearColor(0x000000, 0);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// phones only (touch screen whose short side is under 600 px); tablets and computers play directly on the court
+const COARSE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+document.documentElement.classList.toggle('is-phone', COARSE);
+renderer.setPixelRatio(Math.min(devicePixelRatio, COARSE ? 1.25 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = false;
@@ -211,7 +214,7 @@ youPad.position.copy(youTarget); aiPad.position.copy(aiTarget);
 
 const $ = id => document.getElementById(id);
 function setDigits(el, n) { const s = String(n).padStart(2, '0'); [...el.children].forEach((d, i) => { if (d.textContent !== s[i]) { d.textContent = s[i]; d.classList.remove('flip'); void d.offsetWidth; d.classList.add('flip'); } }); }
-function updateBoard() { setDigits($('scoreYou'), S.score.you); setDigits($('scoreHouse'), S.score.ai); $('rallyN').textContent = String(S.hits).padStart(2, '0'); $('modeText').textContent = engaged ? 'You vs house' : 'House rally'; $('modeHint').textContent = engaged ? (S.state === 'serve-wait' && S.server === 'you' ? 'Click to serve' : 'Live') : 'Hover to play'; }
+function updateBoard() { setDigits($('scoreYou'), S.score.you); setDigits($('scoreHouse'), S.score.ai); $('rallyN').textContent = String(S.hits).padStart(2, '0'); $('modeText').textContent = engaged ? 'You vs house' : 'House rally'; $('modeHint').textContent = engaged ? (S.state === 'serve-wait' && S.server === 'you' ? (COARSE ? 'Tap to serve' : 'Click to serve') : 'Live') : (COARSE ? 'Tap Play' : 'Hover to play'); }
 let flashT = 0;
 function flash(big, small, ms = 1100) { $('flashBig').textContent = big; $('flashSmall').textContent = small || ''; $('flash').classList.add('on'); clearTimeout(flashT); if (ms) flashT = setTimeout(() => $('flash').classList.remove('on'), ms); }
 
@@ -308,11 +311,32 @@ function moveBot(pad, who, target, dt) {
 // ---------- input ----------
 function toPtr(e) { const r = canvas.getBoundingClientRect(), hr = hero.getBoundingClientRect(); ptr.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); const c = $('gcursor'); c.style.left = (e.clientX - hr.left) + 'px'; c.style.top = (e.clientY - hr.top) + 'px'; }
 function engage(on) { if (engaged === on) return; engaged = on; $('gcursor').classList.toggle('on', on && matchMedia('(pointer:fine)').matches); if (on && S.state === 'serve-wait' && S.server === 'you') S.waitUntil = performance.now() + 4500; updateBoard(); }
-canvas.addEventListener('pointermove', e => { toPtr(e); engage(true); });
-canvas.addEventListener('pointerenter', e => { toPtr(e); engage(true); });
-canvas.addEventListener('pointerleave', () => { engage(false); pointerDown = false; });
-canvas.addEventListener('pointerdown', e => { toPtr(e); engage(true); pointerDown = true; armedAt = performance.now(); serveClickAt = armedAt; if (reduced && !running) start(); });
+canvas.addEventListener('pointermove', e => { if (COARSE && !playing) return; toPtr(e); engage(true); });
+canvas.addEventListener('pointerenter', e => { if (COARSE && !playing) return; toPtr(e); engage(true); });
+canvas.addEventListener('pointerleave', () => { pointerDown = false; if (COARSE && playing) return; engage(false); });
+canvas.addEventListener('pointerdown', e => { if (COARSE && !playing) return; toPtr(e); engage(true); pointerDown = true; armedAt = performance.now(); serveClickAt = armedAt; if (reduced && !running) start(); });
 addEventListener('pointerup', () => pointerDown = false);
+
+// ---------- phones & tablets: a full-screen play mode with a quit button ----------
+let playing = false, savedY = 0;
+function setPlay(on) {
+  if (playing === on) return; playing = on;
+  const H = document.documentElement;
+  if (on) {
+    savedY = scrollY; window.__lenis && window.__lenis.stop();
+    H.classList.add('gameplay'); hero.scrollIntoView({ block: 'start' });
+    try { if (H.requestFullscreen && COARSE) H.requestFullscreen({ navigationUI: 'hide' }).catch(() => { }); } catch (_) { }
+  } else {
+    H.classList.remove('gameplay'); engage(false); pointerDown = false;
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => { }); } catch (_) { }
+    window.__lenis && window.__lenis.start(); scrollTo(0, savedY);
+  }
+  requestAnimationFrame(() => { frameCamera(); if (!running) render(0); if (on) { engage(true); start(); } });
+}
+document.getElementById('mplay')?.addEventListener('click', () => setPlay(true));
+document.getElementById('mquit')?.addEventListener('click', () => setPlay(false));
+addEventListener('keydown', e => { if (e.key === 'Escape' && playing) setPlay(false); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && playing && COARSE) { /* user swiped out of full screen: stay in play mode */ requestAnimationFrame(frameCamera); } });
 
 // ---------- loop ----------
 let running = false, visible = true, lastT = performance.now();
@@ -350,7 +374,7 @@ function frameCamera() {
   const fx = key === 'wide' ? (W > 900 ? .64 : .5) : .5, fy = key === 'wide' ? .56 : .42;
   const left = THREE.MathUtils.clamp(W * fx - cx, W - bw, 0), top = THREE.MathUtils.clamp(H * fy - cy, H - bh, 0);
   Object.assign(box.style, { width: bw + 'px', height: bh + 'px', left: left + 'px', top: top + 'px' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2, 2600 / bw));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, COARSE ? (document.documentElement.classList.contains('gameplay') ? 1.75 : 1.25) : 2, 2600 / bw));
   renderer.setSize(bw, bh, false);
 }
 addEventListener('resize', () => { frameCamera(); if (!running) render(0); });

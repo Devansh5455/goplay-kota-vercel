@@ -45,7 +45,7 @@
   /* ---------- smooth scroll on desktop only ---------- */
   let lenis = null;
   if (!touch && !reduced && window.Lenis && hasG) {
-    lenis = new Lenis({ lerp: .09, smoothWheel: true });
+    lenis = new Lenis({ lerp: .09, smoothWheel: true }); window.__lenis = lenis;
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
   }
@@ -215,6 +215,7 @@
     st.addEventListener('click', e => { if (moved > 6) { e.stopPropagation(); e.preventDefault(); } moved = 0; }, true);
   });
 
+  $$('[data-copy]').forEach(b => b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(b.dataset.copy); const t = b.textContent; b.textContent = 'Copied ✓'; setTimeout(() => b.textContent = t, 1600); } catch (e) { } }));
   /* ---------- forms -> WhatsApp ---------- */
   $$('form[data-wa]').forEach(f => f.addEventListener('submit', e => {
     e.preventDefault(); const d = new FormData(f), L = ['Hi Go Play,'];
@@ -238,7 +239,7 @@
       gsap.fromTo(img, { scale: 1.22 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: m, start: 'top bottom', end: 'bottom top', scrub: true } });
     });
     $$('[data-count]').forEach(el => { const end = +el.dataset.count, dec = +(el.dataset.dec || 0), o = { v: 0 }, suf = el.dataset.suf || ''; ScrollTrigger.create({ trigger: el, start: 'top 90%', once: true, onEnter: () => gsap.to(o, { v: end, duration: 2, ease: 'expo.out', onUpdate: () => el.textContent = (dec ? o.v.toFixed(dec) : Math.round(o.v).toLocaleString('en-IN')) + suf }) }); });
-    $$('.marq-in, .trust-in').forEach(m => { m.innerHTML += m.innerHTML; const tw = gsap.to(m, { xPercent: -50, duration: m.classList.contains('trust-in') ? 40 : 24, ease: 'none', repeat: -1 }); ScrollTrigger.create({ trigger: m, onUpdate: s => gsap.to(tw, { timeScale: s.direction * Math.min(4, 1 + Math.abs(s.getVelocity()) / 600), duration: .3, overwrite: true }) }); });
+    $$('.marq-in, .trust-in').forEach(m => { m.innerHTML += m.innerHTML; const tw = gsap.to(m, { xPercent: -50, duration: m.classList.contains('trust-in') ? 40 : 24, ease: 'none', repeat: -1 }); ScrollTrigger.create({ trigger: m, start: 'top bottom', end: 'bottom top', onToggle: s => s.isActive ? tw.play() : tw.pause(), onUpdate: s => gsap.to(tw, { timeScale: s.direction * Math.min(4, 1 + Math.abs(s.getVelocity()) / 600), duration: .3, overwrite: true }) }); });
     $$('.foot .big .fl').forEach((s, i) => gsap.from(s, { yPercent: 60, opacity: 0, duration: 1, ease: 'expo.out', delay: i * .06, scrollTrigger: { trigger: '.foot .big', start: 'top 96%' } }));
     $$('.gal-track').forEach(t => gsap.fromTo(t, { x: 0 }, { x: () => -Math.max(0, t.scrollWidth - innerWidth) * .7, ease: 'none', scrollTrigger: { trigger: t, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true } }));
     $$('.shero .bg').forEach(bg => gsap.to(bg, { yPercent: 12, ease: 'none', scrollTrigger: { trigger: bg.parentElement, start: 'top top', end: 'bottom top', scrub: true } }));
@@ -328,7 +329,7 @@
   }
   /* ---------- animated reviews ---------- */
   function reviewsAnim() {
-    $$('.rv-row').forEach(r => { const d = +r.dataset.dir || 1; gsap.set(r, { xPercent: d > 0 ? 0 : -50 }); const tw = gsap.to(r, { xPercent: d > 0 ? -50 : 0, duration: 38, ease: 'none', repeat: -1 }); r.addEventListener('pointerenter', () => tw.timeScale(.15)); r.addEventListener('pointerleave', () => tw.timeScale(1)); });
+    $$('.rv-row').forEach(r => { const d = +r.dataset.dir || 1; gsap.set(r, { xPercent: d > 0 ? 0 : -50 }); const tw = gsap.to(r, { xPercent: d > 0 ? -50 : 0, duration: 38, ease: 'none', repeat: -1 }); r.addEventListener('pointerenter', () => tw.timeScale(.15)); r.addEventListener('pointerleave', () => tw.timeScale(1)); ScrollTrigger.create({ trigger: r, start: 'top bottom', end: 'bottom top', onToggle: st => st.isActive ? tw.play() : tw.pause() }); });
     $$('.review .stars').forEach(st => ScrollTrigger.create({ trigger: st, start: 'top 95%', once: true, onEnter: () => st.classList.add('go') }));
   }
   /* ---------- footer: the ball bounces in and becomes the O ---------- */
